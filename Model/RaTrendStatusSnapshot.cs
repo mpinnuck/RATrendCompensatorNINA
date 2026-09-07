@@ -1,3 +1,5 @@
+using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace RATrendCompensatorNINA.Model {
@@ -40,13 +42,41 @@ namespace RATrendCompensatorNINA.Model {
         [JsonPropertyName("phd2_avg_dist_arcsec")]
         public double? Phd2AvgDistArcsec { get; set; }
 
+        [JsonPropertyName("right_ascension_hours")]
+        public double? RightAscensionHours { get; set; }
+
         [JsonPropertyName("declination_deg")]
         public double? DeclinationDeg { get; set; }
 
         [JsonPropertyName("side_of_pier")]
+        [JsonConverter(typeof(FlexibleStringConverter))]
         public string SideOfPier { get; set; }
 
         [JsonPropertyName("timestamp")]
         public double Timestamp { get; set; }
+    }
+
+    internal sealed class FlexibleStringConverter : JsonConverter<string> {
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            return reader.TokenType switch {
+                JsonTokenType.String => reader.GetString(),
+                JsonTokenType.Number => reader.TryGetInt64(out var i)
+                    ? i.ToString()
+                    : reader.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                JsonTokenType.True => bool.TrueString,
+                JsonTokenType.False => bool.FalseString,
+                JsonTokenType.Null => null,
+                _ => reader.GetString()
+            };
+        }
+
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options) {
+            if (value == null) {
+                writer.WriteNullValue();
+                return;
+            }
+
+            writer.WriteStringValue(value);
+        }
     }
 }

@@ -62,6 +62,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="RA rate offset" Margin="0,2,10,2" Opacity="0.7" />
@@ -82,15 +83,20 @@
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="PHD2 avg distance" Margin="0,2,10,2" Opacity="0.7" />
                 <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Phd2AvgDistText}" Margin="0,2" />
 
-                <TextBlock Grid.Row="6" Grid.Column="0" Text="Declination / side" Margin="0,2,10,2" Opacity="0.7" />
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Mount RA / Dec" Margin="0,2,10,2" Opacity="0.7" />
                 <TextBlock Grid.Row="6" Grid.Column="1" Margin="0,2">
-                    <Run Text="{Binding DeclinationText}" />
+                    <Run Text="{Binding RightAscensionText}" />
                     <Run Text=" / " />
+                    <Run Text="{Binding DeclinationText}" />
+                </TextBlock>
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Side of pier" Margin="0,2,10,2" Opacity="0.7" />
+                <TextBlock Grid.Row="7" Grid.Column="1" Margin="0,2">
                     <Run Text="{Binding SideOfPierText}" />
                 </TextBlock>
 
-                <TextBlock Grid.Row="7" Grid.Column="0" Text="Last update" Margin="0,2,10,2" Opacity="0.7" />
-                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding LastUpdateText}" Margin="0,2" />
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Last update" Margin="0,2,10,2" Opacity="0.7" />
+                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding LastUpdateText}" Margin="0,2" />
             </Grid>
         </Grid>
     </DataTemplate>

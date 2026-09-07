@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <NinaVersion>3.0.0</NinaVersion>
     <RootNamespace>RATrendCompensatorNINA</RootNamespace>
     <AssemblyName>RATrendCompensatorNINA</AssemblyName>
     <UseWPF>true</UseWPF>
@@ -35,7 +36,7 @@
       <PluginOutput Include="$(TargetDir)RATrendCompensatorNINA.dll" />
       <PluginOutput Include="$(TargetDir)RATrendCompensatorNINA.pdb" />
     </ItemGroup>
-    <Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(LocalAppData)\NINA\Plugins\3rdParty\RATrendCompensatorNINA\" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(LocalAppData)\NINA\Plugins\$(NinaVersion)\RATrendCompensatorNINA\" SkipUnchangedFiles="true" ContinueOnError="true" />
   </Target>
 
 </Project>

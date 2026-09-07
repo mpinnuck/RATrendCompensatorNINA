@@ -26,10 +26,12 @@ namespace RATrendCompensatorNINA.Views {
             var hostBox = (TextBox)panel.FindName("HostBox");
             var portBox = (TextBox)panel.FindName("PortBox");
             var enabledBox = (CheckBox)panel.FindName("EnabledBox");
+            var verboseLoggingBox = (CheckBox)panel.FindName("VerboseLoggingBox");
 
             hostBox.Text = settings.Host;
             portBox.Text = settings.Port.ToString();
             enabledBox.IsChecked = settings.Enabled;
+            verboseLoggingBox.IsChecked = settings.VerboseLogging;
         }
 
         private void HostBox_LostFocus(object sender, RoutedEventArgs e) {
@@ -50,6 +52,11 @@ namespace RATrendCompensatorNINA.Views {
         private void EnabledBox_Changed(object sender, RoutedEventArgs e) {
             if (settings == null) return;
             settings.Enabled = ((CheckBox)sender).IsChecked == true;
+        }
+
+        private void VerboseLoggingBox_Changed(object sender, RoutedEventArgs e) {
+            if (settings == null) return;
+            settings.VerboseLogging = ((CheckBox)sender).IsChecked == true;
         }
     }
 }

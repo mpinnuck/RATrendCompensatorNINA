@@ -14,6 +14,7 @@ namespace RATrendCompensatorNINA.Settings {
         private const string HostKey = "StatusHost";
         private const string PortKey = "StatusPort";
         private const string EnabledKey = "Enabled";
+        private const string VerboseLoggingKey = "VerboseLogging";
 
         private const string DefaultHost = "127.0.0.1";
         private const int DefaultPort = 4401;
@@ -49,6 +50,15 @@ namespace RATrendCompensatorNINA.Settings {
                     : true;
             }
             set => profileService.ActiveProfile.PluginSettings.SetValue(PluginGuid, EnabledKey, value);
+        }
+
+        public bool VerboseLogging {
+            get {
+                return profileService.ActiveProfile.PluginSettings.TryGetValue(PluginGuid, VerboseLoggingKey, out bool value)
+                    ? value
+                    : false;
+            }
+            set => profileService.ActiveProfile.PluginSettings.SetValue(PluginGuid, VerboseLoggingKey, value);
         }
     }
 }

@@ -6,8 +6,8 @@ using NINA.Plugin;
 
 [assembly: AssemblyTitle("RA Trend Compensator Monitor")]
 [assembly: Guid("6f2a9d3e-6b6c-4b9a-8e6f-1a1c2c9c9a11")] // generate your own GUID and never change it after first release
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
 [assembly: AssemblyMetadata("ShortDescription", "Live dockable panel showing RA_TrendCompensator's PHD2 drift-compensation state inside NINA's imaging tab.")]
 
 // -- Recommended --

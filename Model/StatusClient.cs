@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,9 +18,19 @@ namespace RATrendCompensatorNINA.Model {
     /// </summary>
     public class StatusClient : IDisposable {
         private const int ReconnectDelayMs = 3000;
+        private static readonly object LogSync = new object();
+        private static readonly string LogFilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "NINA",
+            "Logs",
+            "RATrendCompensatorNINA.log");
+        private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions {
+            NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
+        };
 
         private readonly string host;
         private readonly int port;
+        private readonly bool verboseLogging;
         private CancellationTokenSource cts;
         private Task runTask;
 
@@ -27,9 +39,30 @@ namespace RATrendCompensatorNINA.Model {
 
         public bool IsConnected { get; private set; }
 
-        public StatusClient(string host, int port) {
+        private void Log(string message, bool verboseOnly = false) {
+            if (verboseOnly && !verboseLogging) return;
+
+            var line = $"[RATrendCompensatorNINA][StatusClient] {DateTime.Now:O} {message}";
+            Trace.WriteLine(line);
+
+            try {
+                var logDirectory = Path.GetDirectoryName(LogFilePath);
+                if (!string.IsNullOrEmpty(logDirectory)) {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
+                lock (LogSync) {
+                    File.AppendAllText(LogFilePath, line + Environment.NewLine);
+                }
+            } catch {
+                // never let diagnostic logging break plugin runtime
+            }
+        }
+
+        public StatusClient(string host, int port, bool verboseLogging) {
             this.host = host;
             this.port = port;
+            this.verboseLogging = verboseLogging;
         }
 
         public void Start() {
@@ -53,10 +86,12 @@ namespace RATrendCompensatorNINA.Model {
             while (!token.IsCancellationRequested) {
                 try {
                     using var client = new TcpClient();
+                    Log($"Connecting to {host}:{port}", verboseOnly: true);
                     var connectTask = client.ConnectAsync(host, port);
                     var completed = await Task.WhenAny(connectTask, Task.Delay(ReconnectDelayMs, token));
                     if (completed != connectTask || !client.Connected) {
                         SetConnected(false);
+                        Log("Connect attempt timed out or was unsuccessful.", verboseOnly: true);
                         continue;
                     }
 
@@ -71,20 +106,29 @@ namespace RATrendCompensatorNINA.Model {
                         if (string.IsNullOrWhiteSpace(line)) continue;
 
                         try {
-                            var snapshot = JsonSerializer.Deserialize<RaTrendStatusSnapshot>(line);
+                            var snapshot = JsonSerializer.Deserialize<RaTrendStatusSnapshot>(line, JsonOptions);
                             if (snapshot != null) {
-                                SnapshotReceived?.Invoke(this, snapshot);
+                                Log($"Snapshot received: running={snapshot.Running}, dry_run={snapshot.DryRun}, slope={snapshot.LastSlopeArcsecPerSec}, rms={snapshot.GuideRmsArcsec}", verboseOnly: true);
+                                try {
+                                    SnapshotReceived?.Invoke(this, snapshot);
+                                } catch (Exception ex) {
+                                    Log($"Snapshot handler threw: {ex.GetType().Name}: {ex.Message}");
+                                }
                             }
                         } catch (JsonException) {
+                            Log($"Snapshot parse failed. Raw line: {line}");
                             // A partial/corrupt line -- skip it and wait for the next one
                             // rather than tearing down the connection over it.
                         }
                     }
                 } catch (OperationCanceledException) {
+                    Log("Status client canceled.");
                     // Stop() was called
                 } catch (SocketException) {
+                    Log("Socket error while connecting/reading status stream.");
                     // RA_TrendCompensator isn't running or refused the connection -- retry
                 } catch (IOException) {
+                    Log("IO error while reading status stream.");
                     // connection dropped mid-read -- retry
                 } finally {
                     SetConnected(false);
@@ -103,6 +147,7 @@ namespace RATrendCompensatorNINA.Model {
         private void SetConnected(bool connected) {
             if (IsConnected == connected) return;
             IsConnected = connected;
+            Log(connected ? "Connected." : "Disconnected.");
             ConnectionStateChanged?.Invoke(this, connected);
         }
 

@@ -4,6 +4,7 @@ using RATrendCompensatorNINA.Model;
 using RATrendCompensatorNINA.Settings;
 using System;
 using System.ComponentModel.Composition;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace RATrendCompensatorNINA.ViewModels {
@@ -34,11 +35,11 @@ namespace RATrendCompensatorNINA.ViewModels {
             settings = new PluginSettings(profileService);
             ConnectionStatusText = "Not connected";
 
-            statusClient = new StatusClient(settings.Host, settings.Port);
+            statusClient = new StatusClient(settings.Host, settings.Port, settings.VerboseLogging);
             statusClient.SnapshotReceived += (s, snapshot) =>
-                Dispatcher.CurrentDispatcher.Invoke(() => ApplySnapshot(snapshot));
+                DispatchToUi(() => ApplySnapshot(snapshot));
             statusClient.ConnectionStateChanged += (s, connected) =>
-                Dispatcher.CurrentDispatcher.Invoke(() => ApplyConnectionState(connected));
+                DispatchToUi(() => ApplyConnectionState(connected));
 
             // Ticks once a second purely to refresh "last update Ns ago" /
             // staleness even when no new snapshot has arrived -- it never
@@ -50,6 +51,16 @@ namespace RATrendCompensatorNINA.ViewModels {
             if (settings.Enabled) {
                 statusClient.Start();
             }
+        }
+
+        private static void DispatchToUi(Action action) {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess()) {
+                action();
+                return;
+            }
+
+            dispatcher.BeginInvoke(action);
         }
 
         private void ApplyConnectionState(bool connected) {
@@ -74,6 +85,7 @@ namespace RATrendCompensatorNINA.ViewModels {
             GuideRmsText = FormatArcsec(snapshot.GuideRmsArcsec);
             GuideRmsTrendText = FormatRate(snapshot.GuideRmsTrendArcsecPerSec, "arcsec/s", snapshot.GuideRmsTrendNSamples);
             Phd2AvgDistText = FormatArcsec(snapshot.Phd2AvgDistArcsec);
+            RightAscensionText = FormatHours(snapshot.RightAscensionHours);
             DeclinationText = snapshot.DeclinationDeg.HasValue ? $"{snapshot.DeclinationDeg.Value:F2}°" : "--";
             SideOfPierText = string.IsNullOrEmpty(snapshot.SideOfPier) ? "--" : snapshot.SideOfPier;
 
@@ -100,6 +112,22 @@ namespace RATrendCompensatorNINA.ViewModels {
 
         private static string FormatArcsec(double? value) =>
             value.HasValue ? $"{value.Value:F2}\"" : "--";
+
+        private static string FormatHours(double? value) {
+            if (!value.HasValue) return "--";
+
+            var normalizedHours = value.Value % 24.0;
+            if (normalizedHours < 0) normalizedHours += 24.0;
+
+            var totalSeconds = normalizedHours * 3600.0;
+            var hours = (int)(totalSeconds / 3600.0);
+            totalSeconds -= hours * 3600.0;
+            var minutes = (int)(totalSeconds / 60.0);
+            totalSeconds -= minutes * 60.0;
+            var seconds = totalSeconds;
+
+            return $"{hours:00}:{minutes:00}:{seconds:00.0}";
+        }
 
         // -- Bound display properties -------------------------------------------------
 
@@ -173,6 +201,12 @@ namespace RATrendCompensatorNINA.ViewModels {
         public string DeclinationText {
             get => declinationText;
             set { declinationText = value; RaisePropertyChanged(); }
+        }
+
+        private string rightAscensionText = "--";
+        public string RightAscensionText {
+            get => rightAscensionText;
+            set { rightAscensionText = value; RaisePropertyChanged(); }
         }
 
         private string sideOfPierText = "--";
