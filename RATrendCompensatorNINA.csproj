@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>RATrendCompensatorNINA</RootNamespace>
+    <AssemblyName>RATrendCompensatorNINA</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NINA.Plugin" Version="3.2.0.9001" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\RaTrendDockableView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\OptionsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <!--
+    Manual, per-machine install for development: drop the built DLL (and
+    any non-NINA-provided dependencies) straight into the local plugins
+    folder so NINA picks it up on next launch. Mirrors the manual
+    distribution method described in the NINA plugin template docs.
+  -->
+  <Target Name="CopyToNinaPlugins" AfterTargets="Build">
+    <ItemGroup>
+      <PluginOutput Include="$(TargetDir)RATrendCompensatorNINA.dll" />
+      <PluginOutput Include="$(TargetDir)RATrendCompensatorNINA.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginOutput)" DestinationFolder="$(LocalAppData)\NINA\Plugins\3rdParty\RATrendCompensatorNINA\" SkipUnchangedFiles="true" ContinueOnError="true" />
+  </Target>
+
+</Project>
