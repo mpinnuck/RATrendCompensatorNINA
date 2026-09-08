@@ -14,7 +14,9 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Connection banner -->
@@ -25,10 +27,13 @@
                             <Setter Property="Fill" Value="Gray" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                    <Setter Property="Fill" Value="Orange" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding ActivelyCorrecting}" Value="True">
                                     <Setter Property="Fill" Value="LimeGreen" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsStale}" Value="True">
-                                    <Setter Property="Fill" Value="Orange" />
+                                    <Setter Property="Fill" Value="Red" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -37,18 +42,101 @@
                 <TextBlock Text="{Binding ConnectionStatusText}" VerticalAlignment="Center" />
             </StackPanel>
 
-            <!-- Running / dry-run badges -->
+            <!-- State / dry-run badges -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
                 <Border Background="#333" CornerRadius="3" Padding="6,2" Margin="0,0,6,0">
-                    <TextBlock Text="{Binding Running, StringFormat='Running: {0}'}" />
+                    <TextBlock Text="{Binding StateText}" FontWeight="Bold" />
+                </Border>
+                <Border Background="#333" CornerRadius="3" Padding="6,2" Margin="0,0,6,0">
+                    <TextBlock Text="{Binding MountTrackingText}" />
                 </Border>
                 <Border Background="#333" CornerRadius="3" Padding="6,2">
                     <TextBlock Text="{Binding DryRun, StringFormat='Dry run: {0}'}" />
                 </Border>
             </StackPanel>
 
+            <!-- Live RA error plot -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,8">
+                <TextBlock Text="{Binding RaErrorPlotRangeText}" Opacity="0.7" Margin="0,0,0,4" />
+                <TextBlock Text="Y: RA error (arcsec), X: time (HH:MM)" Opacity="0.6" FontSize="10" Margin="0,0,0,4" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Grid.Column="0" Height="100" Margin="0,4,6,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="{Binding RaErrorPlotYMaxText}" Opacity="0.7" VerticalAlignment="Top" FontSize="10" />
+                        <TextBlock Grid.Row="1" Text="{Binding RaErrorPlotYMidText}" Opacity="0.7" VerticalAlignment="Center" FontSize="10" />
+                        <TextBlock Grid.Row="2" Text="{Binding RaErrorPlotYMinText}" Opacity="0.7" VerticalAlignment="Bottom" FontSize="10" />
+                    </Grid>
+
+                    <Border Grid.Row="0" Grid.Column="1" BorderBrush="#555" BorderThickness="1" Padding="4" Background="#1A1A1A"
+                            MouseLeftButtonDown="RaErrorPlotBorder_MouseLeftButtonDown"
+                            ToolTip="Double-click to clear graph history">
+                        <Canvas Width="260" Height="100">
+                            <ItemsControl ItemsSource="{Binding RaErrorPlotVerticalGridLines}" IsHitTestVisible="False" Width="260" Height="100">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                        <Setter Property="Canvas.Top" Value="0" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Line X1="0" Y1="0" X2="0" Y2="100" Stroke="#88FFFFFF" StrokeThickness="1" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Line X1="0" Y1="50" X2="260" Y2="50" Stroke="#444" StrokeThickness="1" StrokeDashArray="4 3" />
+                            <Polyline Points="{Binding RaErrorPlotPoints}" Stroke="DeepSkyBlue" StrokeThickness="1.5" />
+                        </Canvas>
+                    </Border>
+
+                    <Canvas Grid.Row="1" Grid.Column="1" Width="260" Height="18" Margin="4,2,4,0" ClipToBounds="True">
+                        <ItemsControl ItemsSource="{Binding RaErrorPlotVerticalGridLines}" IsHitTestVisible="False" Width="260" Height="18">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Canvas />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter">
+                                    <Setter Property="Canvas.Left" Value="{Binding LabelX}" />
+                                    <Setter Property="Canvas.Top" Value="0" />
+                                </Style>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Label}" Opacity="0.9" FontSize="9" Foreground="#CCFFFFFF" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Canvas.Right="0" Canvas.Top="0" Text="{Binding RaErrorPlotXMaxText}" Opacity="0.65" FontSize="8" Foreground="#A0FFFFFF" />
+                    </Canvas>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding RaErrorPlotXMinText}" Opacity="0.65" FontSize="8" Foreground="#A0FFFFFF" Margin="0,2,6,0" VerticalAlignment="Top" HorizontalAlignment="Right" TextAlignment="Right" />
+                </Grid>
+            </StackPanel>
+
             <!-- Live values -->
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -98,6 +186,9 @@
                 <TextBlock Grid.Row="8" Grid.Column="0" Text="Last update" Margin="0,2,10,2" Opacity="0.7" />
                 <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding LastUpdateText}" Margin="0,2" />
             </Grid>
+
+            <TextBlock Grid.Row="4" Text="{Binding LifecycleStatusText}" TextWrapping="Wrap"
+                       Opacity="0.6" FontSize="10" Margin="0,8,0,0" />
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

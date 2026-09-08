@@ -15,6 +15,21 @@ namespace RATrendCompensatorNINA.Model {
         [JsonPropertyName("running")]
         public bool Running { get; set; }
 
+        [JsonPropertyName("phd2_connected")]
+        public bool Phd2Connected { get; set; }
+
+        [JsonPropertyName("phd2_guiding")]
+        public bool Phd2Guiding { get; set; }
+
+        [JsonPropertyName("paused")]
+        public bool Paused { get; set; }
+
+        [JsonPropertyName("mount_tracking")]
+        public bool? MountTracking { get; set; }
+
+        [JsonPropertyName("actively_correcting")]
+        public bool ActivelyCorrecting { get; set; }
+
         [JsonPropertyName("dry_run")]
         public bool DryRun { get; set; }
 
@@ -22,6 +37,7 @@ namespace RATrendCompensatorNINA.Model {
         public double? CurrentOffset { get; set; }
 
         [JsonPropertyName("current_ra_deviation_arcsec")]
+        [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
         public double? CurrentRaDeviationArcsec { get; set; }
 
         [JsonPropertyName("last_slope_arcsec_per_sec")]
@@ -53,6 +69,7 @@ namespace RATrendCompensatorNINA.Model {
         public string SideOfPier { get; set; }
 
         [JsonPropertyName("timestamp")]
+        [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
         public double Timestamp { get; set; }
     }
 

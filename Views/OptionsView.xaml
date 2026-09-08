@@ -9,7 +9,42 @@
         that title, update this key to match.
     -->
     <DataTemplate x:Key="RA Trend Compensator Monitor_Options">
-        <StackPanel Orientation="Vertical" MinWidth="260" Loaded="RootPanel_Loaded">
+        <StackPanel Orientation="Vertical" MinWidth="280" Loaded="RootPanel_Loaded">
+            <TextBlock Text="Launch RA_TrendCompensator" FontWeight="Bold" Margin="0,0,0,6" />
+
+            <Grid Margin="0,2,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <CheckBox x:Name="LaunchAppBox" Grid.Column="0" VerticalAlignment="Top" Checked="LaunchAppBox_Changed" Unchecked="LaunchAppBox_Changed" />
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                    <TextBlock Text="Launch and manage the app" FontWeight="SemiBold" />
+                    <TextBlock Text="Starts RA_TrendCompensator when this panel loads and closes it (gracefully, resetting the RA rate) when NINA shuts down. Turn off if you'd rather start/stop it yourself."
+                               TextWrapping="Wrap" Opacity="0.7" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Margin="0,8,0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Path" VerticalAlignment="Center" />
+                <TextBox x:Name="ExecutablePathBox" Grid.Column="1" LostFocus="ExecutablePathBox_LostFocus" />
+            </Grid>
+            <TextBlock Text="Full path to RA_TrendCompensator.exe, or to python.exe if using Arguments below to point at main.py."
+                       TextWrapping="Wrap" Opacity="0.6" FontSize="10" Margin="0,0,0,4" />
+
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Arguments" VerticalAlignment="Center" />
+                <TextBox x:Name="ArgumentsBox" Grid.Column="1" LostFocus="ArgumentsBox_LostFocus" />
+            </Grid>
+
             <TextBlock Text="Status socket" FontWeight="Bold" Margin="0,0,0,6" />
             <TextBlock Text="Must match RA_TrendCompensator's status_server_host / status_server_port config."
                        TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,8" />
@@ -31,6 +66,17 @@
                 <TextBlock Grid.Column="0" Text="Port" VerticalAlignment="Center" />
                 <TextBox x:Name="PortBox" Grid.Column="1" LostFocus="PortBox_LostFocus" />
             </Grid>
+
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Graph buffer hours" VerticalAlignment="Center" />
+                <TextBox x:Name="PlotHistoryHoursBox" Grid.Column="1" LostFocus="PlotHistoryHoursBox_LostFocus" />
+            </Grid>
+            <TextBlock Text="Rolling history duration for the RA error graph (for example 3, 6, or 12)."
+                       TextWrapping="Wrap" Opacity="0.6" FontSize="10" Margin="0,0,0,8" />
 
             <Grid Margin="0,2,0,0">
                 <Grid.ColumnDefinitions>

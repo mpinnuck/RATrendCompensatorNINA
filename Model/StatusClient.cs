@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -18,12 +17,6 @@ namespace RATrendCompensatorNINA.Model {
     /// </summary>
     public class StatusClient : IDisposable {
         private const int ReconnectDelayMs = 3000;
-        private static readonly object LogSync = new object();
-        private static readonly string LogFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "NINA",
-            "Logs",
-            "RATrendCompensatorNINA.log");
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions {
             NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
         };
@@ -41,22 +34,7 @@ namespace RATrendCompensatorNINA.Model {
 
         private void Log(string message, bool verboseOnly = false) {
             if (verboseOnly && !verboseLogging) return;
-
-            var line = $"[RATrendCompensatorNINA][StatusClient] {DateTime.Now:O} {message}";
-            Trace.WriteLine(line);
-
-            try {
-                var logDirectory = Path.GetDirectoryName(LogFilePath);
-                if (!string.IsNullOrEmpty(logDirectory)) {
-                    Directory.CreateDirectory(logDirectory);
-                }
-
-                lock (LogSync) {
-                    File.AppendAllText(LogFilePath, line + Environment.NewLine);
-                }
-            } catch {
-                // never let diagnostic logging break plugin runtime
-            }
+            PluginLog.Write("StatusClient", message);
         }
 
         public StatusClient(string host, int port, bool verboseLogging) {
@@ -148,7 +126,11 @@ namespace RATrendCompensatorNINA.Model {
             if (IsConnected == connected) return;
             IsConnected = connected;
             Log(connected ? "Connected." : "Disconnected.");
-            ConnectionStateChanged?.Invoke(this, connected);
+            try {
+                ConnectionStateChanged?.Invoke(this, connected);
+            } catch (Exception ex) {
+                Log($"ConnectionStateChanged handler threw: {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         public void Dispose() {
