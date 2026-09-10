@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+autonumber
+
+title Render plugin in NINA imaging page
+
+actor User
+participant "NINA Imaging Page" as Imaging
+participant "RaTrendDockableView.xaml" as View
+participant "RaTrendDockableVM" as VM
+participant "WPF Binding Engine" as Binding
+participant "StatusClient" as Status
+
+User -> Imaging: Open Imaging tab
+Imaging -> View: Load resource dictionary/view
+View -> VM: Bind DataContext
+
+Binding -> VM: Read initial properties
+VM --> Binding: ConnectionStatusText, StateText,
+VM --> Binding: RaErrorPlotPoints, axis labels
+Binding -> View: Paint initial UI
+
+Status -> VM: ConnectionStateChanged(connected?)
+VM -> VM: ApplyConnectionState()
+VM --> Binding: PropertyChanged(ConnectionStatusText, IsConnected)
+Binding -> View: Update indicator
+
+Status -> VM: SnapshotReceived(snapshot)
+VM -> VM: ApplySnapshot(snapshot)
+VM -> VM: RefreshRaErrorPlot()
+VM --> Binding: PropertyChanged(plot + text fields)
+Binding -> View: Re-render chart and status badges
+@enduml

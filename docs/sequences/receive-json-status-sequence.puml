@@ -1,0 +1,40 @@
+@startuml
+skinparam shadowing false
+autonumber
+
+title Receive and apply JSON status snapshot
+
+participant "StatusClient" as Status
+participant "TCP Socket" as Socket
+participant "JsonSerializer" as Json
+participant "RaTrendStatusSnapshot" as Snapshot
+participant "RaTrendDockableVM" as VM
+participant "WPF Dispatcher" as UI
+participant "PluginLog" as Log
+
+Status -> Socket: Connect(host, port)
+Socket --> Status: Connected stream
+
+loop For each line
+  Status -> Socket: ReadLineAsync()
+  Socket --> Status: JSON line
+
+  alt Blank line
+	Status -> Status: Ignore
+  else Parseable JSON
+	Status -> Json: Deserialize<RaTrendStatusSnapshot>(line)
+	Json --> Status: Snapshot
+	Status -> VM: SnapshotReceived(snapshot)
+	VM -> UI: DispatchToUi(ApplySnapshot)
+	UI -> VM: ApplySnapshot(snapshot)
+	VM -> VM: Update status fields + RefreshRaErrorPlot()
+  else JsonException
+	Status -> Log: Write parse failure + raw line
+  end
+end
+
+alt Connection drop / socket error
+  Status -> Log: Write disconnect reason
+  Status -> Status: Delay and reconnect
+end
+@enduml

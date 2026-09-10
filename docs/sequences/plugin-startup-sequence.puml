@@ -1,0 +1,40 @@
+@startuml
+skinparam shadowing false
+autonumber
+
+title Plugin startup sequence
+
+actor User
+participant "NINA Host" as NINA
+participant "MEF Container" as MEF
+participant "RATrendCompensatorPlugin" as Plugin
+participant "RaTrendDockableVM" as VM
+participant "PluginSettings" as Settings
+participant "AppLifecycleManager" as Lifecycle
+participant "StatusClient" as Status
+participant "PluginLog" as Log
+
+User -> NINA: Launch NINA
+NINA -> MEF: Compose plugin exports
+MEF -> Plugin: Create with IProfileService
+Plugin -> Plugin: Store ProfileService (static)
+
+NINA -> VM: Construct dockable VM
+VM -> Log: WriteStartupHeader/Write("constructor entered")
+VM -> Settings: Load settings
+Settings --> VM: Enabled, LaunchApp, Host, Port, Paths
+
+alt LaunchApp enabled and executable valid
+  VM -> Lifecycle: new(executablePath, arguments, logger)
+  VM -> Lifecycle: Launch()
+  Lifecycle -> Log: Launch/attach outcome
+else Launch disabled or invalid path
+  VM -> Log: Write startup warning
+end
+
+VM -> Status: new(host, port, verbose)
+VM -> Status: Start() if Enabled
+Status -> Log: Connection attempts
+
+VM --> NINA: Dockable VM ready
+@enduml

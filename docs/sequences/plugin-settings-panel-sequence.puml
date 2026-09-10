@@ -1,0 +1,28 @@
+@startuml
+skinparam shadowing false
+autonumber
+
+title Display settings in NINA plugin panel
+
+actor User
+participant "NINA Plugin Settings UI" as NINA
+participant "OptionsView.xaml" as OptionsView
+participant "RATrendCompensatorPlugin" as Plugin
+participant "PluginSettings" as Settings
+participant "NINA Profile Store" as Store
+
+User -> NINA: Open plugin settings page
+NINA -> OptionsView: Load view
+OptionsView -> Plugin: Read static ProfileService
+OptionsView -> Settings: new(ProfileService)
+
+OptionsView -> Store: Get Host/Port/Enabled/Verbose
+Store --> OptionsView: Current values
+OptionsView -> Store: Get LaunchApp/ExecutablePath/Arguments/PlotHistoryHours
+Store --> OptionsView: Current values
+OptionsView --> User: Show populated settings controls
+
+User -> OptionsView: Edit values (lost focus / checkbox change)
+OptionsView -> Settings: Set properties
+Settings -> Store: Persist values by plugin GUID
+@enduml

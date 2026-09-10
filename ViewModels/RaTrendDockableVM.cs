@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -78,7 +77,7 @@ namespace RATrendCompensatorNINA.ViewModels {
             var boundedPlotHistoryHours = Math.Max(0.25, Math.Min(24.0, configuredPlotHistoryHours));
             plotHistoryWindow = TimeSpan.FromHours(boundedPlotHistoryHours);
             PluginLog.Write("Startup", $"Settings loaded: enabled={settings.Enabled}, launchApp={settings.LaunchApp}, verboseLogging={settings.VerboseLogging}, host={settings.Host}, port={settings.Port}, bufferHours={boundedPlotHistoryHours:0.##}, executablePathSet={!string.IsNullOrWhiteSpace(settings.ExecutablePath)}");
-            ConnectionStatusText = "Not connected";
+            ConnectionStatusText = "not connected";
 
             var hasExecutablePath = !string.IsNullOrWhiteSpace(settings.ExecutablePath);
             var hasValidExecutablePath = hasExecutablePath && File.Exists(settings.ExecutablePath);
@@ -92,7 +91,6 @@ namespace RATrendCompensatorNINA.ViewModels {
                             DispatchToUi(() => LifecycleStatusText = msg);
                         });
                     appLifecycle.Launch();
-                    ScheduleBringNinaToFront();
                     // Standard WPF application-exit event -- fires when NINA's
                     // Application.Shutdown() runs or its last window closes.
                     // This is the primary shutdown hook; Dispose() below (in
@@ -176,36 +174,6 @@ namespace RATrendCompensatorNINA.ViewModels {
             }
         }
 
-        private void ScheduleBringNinaToFront() {
-            DispatchToUi(() => _ = BringNinaToFrontAsync());
-        }
-
-        private async Task BringNinaToFrontAsync() {
-            for (var i = 0; i < 20; i++) {
-                try {
-                    var mainWindow = Application.Current?.MainWindow;
-                    if (mainWindow != null) {
-                        if (mainWindow.WindowState == WindowState.Minimized) {
-                            mainWindow.WindowState = WindowState.Normal;
-                        }
-
-                        var originalTopmost = mainWindow.Topmost;
-                        mainWindow.Topmost = true;
-                        mainWindow.Topmost = originalTopmost;
-                        mainWindow.Activate();
-                        mainWindow.Focus();
-
-                        if (mainWindow.IsActive) {
-                            return;
-                        }
-                    }
-                } catch {
-                }
-
-                await Task.Delay(250).ConfigureAwait(true);
-            }
-        }
-
         public void Dispose() {
             // Redundant safety net alongside the Application.Current.Exit
             // hook in the constructor -- see that comment for why both exist.
@@ -215,8 +183,8 @@ namespace RATrendCompensatorNINA.ViewModels {
         private void ApplyConnectionState(bool connected) {
             IsConnected = connected;
             ConnectionStatusText = connected
-                ? "Connected"
-                : $"Waiting for RA_TrendCompensator at {settings.Host}:{settings.Port}...";
+                ? "connected"
+                : "not connected";
             if (!connected) {
                 IsStale = false;
             }

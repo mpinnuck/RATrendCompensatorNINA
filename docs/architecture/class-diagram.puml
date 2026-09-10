@@ -1,0 +1,110 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+left to right direction
+
+class RATrendCompensatorPlugin {
+  +ProfileService : IProfileService {static}
+  +RATrendCompensatorPlugin(profileService: IProfileService)
+}
+
+class PluginSettings {
+  -profileService : IProfileService
+  +Host : string
+  +Port : int
+  +Enabled : bool
+  +VerboseLogging : bool
+  +LaunchApp : bool
+  +ExecutablePath : string
+  +Arguments : string
+  +PlotHistoryHours : double
+}
+
+class RaTrendDockableVM {
+  -settings : PluginSettings
+  -statusClient : StatusClient
+  -appLifecycle : AppLifecycleManager
+  -raErrorHistory : List<RaErrorSample>
+  +ClearRaErrorPlot()
+  +Dispose()
+}
+
+class StatusClient {
+  +IsConnected : bool
+  +SnapshotReceived : event
+  +ConnectionStateChanged : event
+  +Start()
+  +Stop()
+  +Dispose()
+}
+
+class AppLifecycleManager {
+  -executablePath : string
+  -arguments : string
+  +Launch()
+  +Shutdown(timeout: TimeSpan)
+  +Dispose()
+}
+
+class RaTrendStatusSnapshot {
+  +Running : bool
+  +Phd2Connected : bool
+  +Phd2Guiding : bool
+  +Paused : bool
+  +ActivelyCorrecting : bool
+  +CurrentRaDeviationArcsec : double?
+  +Timestamp : double
+}
+
+class PluginLog {
+  +WriteStartupHeader() {static}
+  +Write(source: string, message: string) {static}
+}
+
+class OptionsView {
+  -settings : PluginSettings
+  +RootPanel_Loaded(sender, e)
+}
+
+class RaTrendDockableView {
+  +RaErrorPlotBorder_MouseLeftButtonDown(sender, e)
+}
+
+class RaErrorSample {
+  +TimestampUtc : DateTime
+  +ValueArcsec : double?
+}
+
+class PlotTimeTick {
+  +X : double
+  +Label : string
+  +LabelX : double
+}
+
+class DockableVM
+interface IDisposable
+interface IProfileService
+
+RATrendCompensatorPlugin --> IProfileService : receives
+OptionsView --> RATrendCompensatorPlugin : reads ProfileService
+OptionsView --> PluginSettings : reads/writes
+
+RaTrendDockableVM --|> DockableVM
+RaTrendDockableVM ..|> IDisposable
+RaTrendDockableVM --> PluginSettings
+RaTrendDockableVM --> StatusClient
+RaTrendDockableVM --> AppLifecycleManager
+RaTrendDockableVM ..> PluginLog
+RaTrendDockableVM ..> RaTrendStatusSnapshot
+RaTrendDockableVM *-- RaErrorSample
+RaTrendDockableVM ..> PlotTimeTick
+
+StatusClient ..|> IDisposable
+StatusClient ..> RaTrendStatusSnapshot
+StatusClient ..> PluginLog
+
+AppLifecycleManager ..|> IDisposable
+AppLifecycleManager ..> PluginLog
+
+RaTrendDockableView ..> RaTrendDockableVM
+@enduml

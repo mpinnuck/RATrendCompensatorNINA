@@ -107,6 +107,13 @@ namespace RATrendCompensatorNINA.Model {
                 return false;
             }
 
+            if (string.Equals(processName, "python", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(processName, "pythonw", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(processName, "py", StringComparison.OrdinalIgnoreCase)) {
+                SafeLog($"Attach skipped for shared interpreter '{processName}'. Launching a dedicated process instead.");
+                return false;
+            }
+
             foreach (var candidate in Process.GetProcessesByName(processName)) {
                 try {
                     if (candidate.HasExited) {
@@ -124,6 +131,8 @@ namespace RATrendCompensatorNINA.Model {
                         runningProcess = candidate;
                         return true;
                     }
+
+                    candidate.Dispose();
                 } catch {
                     candidate.Dispose();
                 }
